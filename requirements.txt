@@ -1,0 +1,4 @@
+SpeechRecognition
+py3-tts
+langchain
+pyaudio
