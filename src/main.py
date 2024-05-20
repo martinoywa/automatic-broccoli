@@ -6,11 +6,13 @@ from langchain.memory import ChatMessageHistory
 
 from models.models import HumanResponse, AIResponse
 
+
 # AI Prompt Template and Chain
 llm = Ollama(model="llama2")
 prompt = ChatPromptTemplate.from_messages([
     ("system",
-     "You are a chatbot assistant. Keep your responses concise and relevant. Do not start responses with either 'Assisstant:' or 'Bot:' or 'AI:'."),
+     "You are a chatbot assistant. Keep your responses concise and relevant. Do not start responses with either "
+     "'Assisstant:' or 'Bot:' or 'AI:'."),
     MessagesPlaceholder(variable_name="chat_history")
 ])
 output_parser = StrOutputParser()
@@ -18,6 +20,7 @@ chat_history_memory = ChatMessageHistory()
 chain = prompt | llm | output_parser
 
 # Transcript
+processed_chat_history = []
 transcript_memory = []
 
 # Fast API
@@ -31,6 +34,18 @@ def update_chat_history(text, human=True):
         chat_history_memory.add_user_message(text)
     else:
         chat_history_memory.add_ai_message(text)
+
+
+def process_chat_history(human, ai):
+    """
+    Function to process chat history for payload.
+    Addedd as cannot have Langchain type in pydantic v2.
+    May not be necessary as /chathistory endpoint returns data well.
+    :param human:
+    :param ai:
+    :return:
+    """
+    processed_chat_history.append((human, ai))
 
 
 def update_transcript(text, human=True):
@@ -50,20 +65,20 @@ async def chat(message: HumanResponse):
     # update chat history
     update_chat_history(message.response)
     response = chain.invoke({"chat_history": chat_history_memory.messages})
+    if response[:3] == "AI:":  # AI seems to fail to respect the prompt template. Not sure why.
+        response = response[3:]
     update_chat_history(response, human=False)
+    process_chat_history(message.response, response)
 
     # update transcript
     update_transcript(message.response)
     update_transcript(response, human=False)
 
-    if response[:3] == "AI:":  # AI seems to fail to respect the prompt template. Not sure why.
-        response = response[3:]
-
-    # print(chat_history_memory.messages, type(chat_history_memory.messages))
+    print(type(chat_history_memory))
 
     return {"name": "ai_response",
             "response": response,
-            "chat_history": chat_history_memory.messages}
+            "chat_history": processed_chat_history}
 
 
 @router.get("/chathistory")
