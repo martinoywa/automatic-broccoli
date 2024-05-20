@@ -2,3 +2,5 @@ SpeechRecognition
 py3-tts
 langchain
 pyaudio
+fastapi
+pydantic
