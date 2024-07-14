@@ -11,6 +11,6 @@ class HumanResponse(BaseModel):
 
 
 class AIResponse(BaseModel):
-    name: str
+    # name: str
     response: str
-    chat_history: List[Tuple[str, str]]
+    # chat_history: List[Tuple[str, str]]
