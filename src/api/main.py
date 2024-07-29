@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from models.models import HumanResponse, AIResponse
+from src.api.models.models import AIResponse
 
 # AI Prompt Template and Chain
 print("Loading LLM")
