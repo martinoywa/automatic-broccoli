@@ -6,11 +6,13 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
+from src.api.database.db import save_message, load_session_history, get_db
 from src.api.models.models import AIResponse
+
 
 # AI Prompt Template and Chain
 print("Loading LLM")
-llm = Ollama(model="llama2")
+llm = Ollama(model="llama3.1")
 
 qa_system_prompt = """You are an assistant for question-answering tasks. \
 Use the following pieces of retrieved context to answer the question. \
@@ -34,7 +36,7 @@ session_store = {}
 
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in session_store:
-        session_store[session_id] = ChatMessageHistory()
+        session_store[session_id] = load_session_history(session_id)
     return session_store[session_id]
 
 
@@ -77,12 +79,14 @@ async def home():
 
 @router.post("/chat", response_model=AIResponse)
 async def chat(message: str, session_id: str):
+    save_message(session_id, "human", message)
     response = chain_with_history.invoke(
         {"input": message},
         config={"configurable": {"session_id": session_id}}
     )
     if response[:3] == "AI:":  # LLM sometimes adds this.
         response = response[3:]
+    save_message(session_id, "ai", response)
 
     # update transcript
     update_transcript(session_id, message)
@@ -95,7 +99,7 @@ async def chat(message: str, session_id: str):
 
 @router.get("/chathistory")
 async def chat_history(session_id: str):
-    return {"chat_history": session_store.get(session_id)}
+    return {"chat_history": chain_with_history.get_session_history(session_id)}
 
 
 @router.post("/deltechathisory")
