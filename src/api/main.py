@@ -26,10 +26,6 @@ qa_prompt = ChatPromptTemplate.from_messages([
 output_parser = StrOutputParser()
 
 chain = qa_prompt | llm | output_parser
-
-# Transcript
-# processed_chat_history = []  # TODO fetch from session store
-# transcript_memory = {}
 session_store = {}
 
 
@@ -52,24 +48,15 @@ router = APIRouter()
 prefix = "/api/v1"
 
 
-# def process_chat_history(human, ai):
-#     """
-#     Function to process chat history for payload.
-#     Addedd as cannot have Langchain type in pydantic v2.
-#     May not be necessary as /chathistory endpoint returns data well.
-#     :param human:
-#     :param ai:
-#     :return:
-#     """
-#     processed_chat_history.append((human, ai))
-
-
-def generate_transcript(session_id):
+def generate_transcript(session_id):  # TODO unable to load last messages, format different db values
     transcript_memory = []
     history = chain_with_history.get_session_history(session_id).messages
     if len(history) > 0:
         for message in history:
-            transcript_memory.append(f"{message['role']}: {message['content']}")
+            try:
+                transcript_memory.append(f"{message['role']}: {message['content']}")
+            except TypeError:
+                pass
     return transcript_memory
 
 
@@ -78,7 +65,6 @@ def generate_transcript(session_id):
 #         transcript_memory[session_id].append(f"{role} {text}")
 #     else:
 #         transcript_memory[session_id] = [f"{role} {text}"]
-
 
 @router.get("/")
 async def home():
@@ -125,6 +111,5 @@ async def transcript(session_id: str):
 async def delete_transcript():
     # transcript_memory.clear()
     return {"message": "WIP! Nothing cleared"}
-
 
 app.include_router(router, prefix=prefix)
