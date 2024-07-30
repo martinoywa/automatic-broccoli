@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from src.api.database.db import save_message, load_session_history, get_db
+from src.api.database.db import save_message, load_session_history, delete_session_history
 from src.api.models.models import AIResponse
 
 # AI Prompt Template and Chain
@@ -96,10 +96,10 @@ async def chat_history(session_id: str):
     return {"chat_history": chain_with_history.get_session_history(session_id)}
 
 
-@router.post("/deltechathisory")
+@router.delete("/deltechathisory/{session_id}")
 async def delete_chat_history(session_id: str):
-    del session_store[session_id]
-    return {"message": "WIP! Only session was cleared"}
+    message = delete_session_history(session_id)
+    return {"message": message}
 
 
 @router.get("/transcript")
@@ -107,7 +107,7 @@ async def transcript(session_id: str):
     return {"transcript": generate_transcript(session_id)}
 
 
-@router.post("/deltetranscript")
+@router.delete("/deltetranscript")
 async def delete_transcript():
     # transcript_memory.clear()
     return {"message": "WIP! Nothing cleared"}

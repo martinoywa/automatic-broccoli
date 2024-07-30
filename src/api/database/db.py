@@ -72,6 +72,26 @@ def load_session_history(session_id: str) -> BaseChatMessageHistory:
     return chat_history
 
 
+def delete_session_history(session_id: str):
+    db = next(get_db())
+    try:
+        # check if session exists
+        session = db.query(Session).filter(Session.session_id == session_id).first()
+        if session:
+            messages = db.query(Message).filter(Message.session_id == session.id).all()
+            for message in messages:
+                db.delete(message)
+            db.delete(session)
+            db.commit()
+            return "Session deleted"
+        else:
+            return "Session not found"
+    except SQLAlchemyError:
+        db.rollback()
+    finally:
+        db.close()
+
+
 def get_db():
     db = SessionLocal()
     try:
