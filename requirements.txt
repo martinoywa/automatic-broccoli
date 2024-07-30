@@ -1,6 +1,7 @@
 SpeechRecognition
 py3-tts
-langchain
+langchain~=0.2.0
 pyaudio
-fastapi
-pydantic
+fastapi~=0.111.0
+pydantic~=2.7.1
+sqlalchemy~=2.0.30
