@@ -14,3 +14,7 @@ class AIResponse(BaseModel):
     # name: str
     response: str
     # chat_history: List[Tuple[str, str]]
+
+
+class MessageRequest(BaseModel):
+    message: str
