@@ -1,3 +1,5 @@
+from crypt import methods
+
 from fastapi import FastAPI, APIRouter
 from langchain_community.llms.ollama import Ollama
 from langchain_core.chat_history import BaseChatMessageHistory
@@ -7,16 +9,17 @@ from langchain.memory import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
 from src.api.database.db import save_message, load_session_history, delete_session_history
-from src.api.models.models import AIResponse
+from src.api.models.models import AIResponse, MessageRequest
 
 # AI Prompt Template and Chain
 print("Loading LLM")
 llm = Ollama(model="llama3.1")
 
-qa_system_prompt = """You are an assistant for question-answering tasks. \
+qa_system_prompt = """Your name is Conv. This is how you'll be referred to by the user.
+You are an assistant and/or companion for turn-based conversations or question-answering tasks. \
 Use the following pieces of retrieved context to answer the question. \
 If you don't know the answer, just say that you don't know. \
-Use three sentences maximum and keep the answer concise."""
+Use three sentences maximum and keep the answer concise.""" # TODO update the system prompt to fit the usecase.
 
 qa_prompt = ChatPromptTemplate.from_messages([
     ("system", qa_system_prompt),
@@ -68,11 +71,17 @@ def generate_transcript(session_id):  # TODO unable to load last messages, forma
 
 @router.get("/")
 async def home():
-    return {"message": "Voice Chatbot with LLM"}
+    return {"message": "Conversation.ai LLM-based Backend"}
+
+
+@router.post("/test/chat", response_model=AIResponse)
+async def chat(message: MessageRequest):
+    return {"response": "Hello there! Hope you're doing well. This is a test response"}
 
 
 @router.post("/chat", response_model=AIResponse)
 async def chat(message: str, session_id: str):
+    # TODO Update method. Application content type is JSON.
     save_message(session_id, "human", message)
     response = chain_with_history.invoke(
         {"input": message},
