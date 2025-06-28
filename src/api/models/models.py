@@ -18,3 +18,4 @@ class AIResponse(BaseModel):
 
 class MessageRequest(BaseModel):
     message: str
+    session_id: str

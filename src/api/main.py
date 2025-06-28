@@ -15,7 +15,7 @@ from src.api.models.models import AIResponse, MessageRequest
 print("Loading LLM")
 llm = Ollama(model="llama3.1")
 
-qa_system_prompt = """Your name is Conv. This is how you'll be referred to by the user.
+qa_system_prompt = """Your name is Convo. This is how you'll be referred to by the user.
 You are an assistant and/or companion for turn-based conversations or question-answering tasks. \
 Use the following pieces of retrieved context to answer the question. \
 If you don't know the answer, just say that you don't know. \
@@ -76,12 +76,14 @@ async def home():
 
 @router.post("/test/chat", response_model=AIResponse)
 async def chat(message: MessageRequest):
+    print(message.text, message.session_id)
     return {"response": "Hello there! Hope you're doing well. This is a test response"}
 
 
 @router.post("/chat", response_model=AIResponse)
-async def chat(message: str, session_id: str):
+async def chat(message: MessageRequest):
     # TODO Update method. Application content type is JSON.
+    message, session_id = message.message, message.session_id
     save_message(session_id, "human", message)
     response = chain_with_history.invoke(
         {"input": message},
